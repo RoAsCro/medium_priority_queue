@@ -2,7 +2,7 @@ import json
 import os
 import boto3
 
-from jira import JIRA
+from jira import JIRA, exceptions
 
 from dotenv import load_dotenv
 
@@ -42,11 +42,16 @@ def get_message():
     message = response["Messages"][0]
     receipt_handle = message["ReceiptHandle"]
 
+    try:
+        notify_jira(message)
+    except exceptions.JIRAError as ex:
+        print(ex)
+        return
+
     sqs.delete_message(
         QueueUrl=queue,
         ReceiptHandle=receipt_handle
     )
-    notify_jira(message)
 
 def notify_jira(message):
     print("Sending...")
