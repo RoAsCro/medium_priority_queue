@@ -1,3 +1,4 @@
+import json
 import os
 import boto3
 
@@ -13,6 +14,7 @@ aws_region = os.getenv("AWS_REGION")
 jira_url = os.getenv("JIRA_URL")
 jira_board = os.getenv("BOARD_ID")
 jira_token = os.getenv("API_TOKEN")
+issue_type = os.getenv("ISSUE_TYPE")
 
 email = os.getenv("EMAIL")
 
@@ -47,14 +49,14 @@ def get_message():
     notify_jira(message)
 
 def notify_jira(message):
-    print(message["Body"])
+    message_json = json.loads(message["Body"])
+    outgoing = {
+        'project': {'key': jira_board},
+        'summary': f"{message_json['priority']} priority - {message_json['title']}",
+        'description': message_json['message'],
+        'issuetype': {'name': issue_type}
+    }
+    jira.create_issue(outgoing)
 
-
-# get_message()
-print(jira.project(jira_board))
-print(jira.create_issue({
-    'project': {'key': jira_board},
-    'summary': 'New issue from jira-python',
-    'description': 'Look into this one',
-    'issuetype': {'name': 'Task'},
-}))
+while True:
+    get_message()
