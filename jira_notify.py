@@ -1,7 +1,7 @@
 import os
 import boto3
 
-from atlassian import Jira
+from jira import JIRA
 
 from dotenv import load_dotenv
 
@@ -10,10 +10,15 @@ queue = os.getenv("MID_PRIORITY_QUEUE")
 access_id = os.getenv("AWS_ACCESS_KEY_ID")
 access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_REGION")
-jira_board = os.getenv("JIRA_BOARD")
+jira_url = os.getenv("JIRA_URL")
+jira_board = os.getenv("BOARD_ID")
 jira_token = os.getenv("API_TOKEN")
 
-jira = Jira(url=jira_board, token=jira_token)
+email = os.getenv("EMAIL")
+
+headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
+headers["Authorization"] = f"Bearer {jira_token}"
+jira = JIRA(jira_url, basic_auth=(email, jira_token))
 
 sqs = boto3.client("sqs",
                    region_name=aws_region,
@@ -44,4 +49,12 @@ def get_message():
 def notify_jira(message):
     print(message["Body"])
 
-get_message()
+
+# get_message()
+print(jira.project(jira_board))
+print(jira.create_issue({
+    'project': {'key': jira_board},
+    'summary': 'New issue from jira-python',
+    'description': 'Look into this one',
+    'issuetype': {'name': 'Task'},
+}))
