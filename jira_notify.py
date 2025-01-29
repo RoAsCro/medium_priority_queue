@@ -49,14 +49,17 @@ def get_message():
     notify_jira(message)
 
 def notify_jira(message):
+    print("Sending...")
     message_json = json.loads(message["Body"])
+    priority = message_json['priority'].capitalize()
     outgoing = {
         'project': {'key': jira_board},
-        'summary': f"{message_json['priority']} priority - {message_json['title']}",
+        'summary': f"{priority} priority - {message_json['title']}",
         'description': message_json['message'],
         'issuetype': {'name': issue_type}
     }
     jira.create_issue(outgoing)
 
-while True:
-    get_message()
+if __name__ == "__main__":
+    while True:
+        get_message()
