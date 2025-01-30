@@ -27,7 +27,9 @@ sqs = boto3.client("sqs",
                    aws_access_key_id=access_id,
                    aws_secret_access_key=access_key)
 
-def get_message():
+running = True
+
+def get_from_queue():
     response = sqs.receive_message(
         QueueUrl=queue,
         MaxNumberOfMessages=1,
@@ -37,21 +39,11 @@ def get_message():
     )
 
     if "Messages" not in response:
-        return
+        return None
 
     message = response["Messages"][0]
-    receipt_handle = message["ReceiptHandle"]
+    return message
 
-    try:
-        notify_jira(message)
-    except exceptions.JIRAError as ex:
-        print(ex)
-        return
-
-    sqs.delete_message(
-        QueueUrl=queue,
-        ReceiptHandle=receipt_handle
-    )
 
 def notify_jira(message):
     print("Sending...")
@@ -65,6 +57,27 @@ def notify_jira(message):
     }
     jira.create_issue(outgoing)
 
+
+def delete(message):
+    receipt_handle = message["ReceiptHandle"]
+    sqs.delete_message(
+        QueueUrl=queue,
+        ReceiptHandle=receipt_handle
+    )
+
+
+def run():
+    global running
+    running = True
+    while running:
+        message = get_from_queue()
+        if message:
+            try:
+                notify_jira(message)
+            except exceptions.JIRAError as ex:
+                print(ex)
+                continue
+            delete(message)
+
 if __name__ == "__main__":
-    while True:
-        get_message()
+    run()
