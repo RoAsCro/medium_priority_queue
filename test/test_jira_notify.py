@@ -8,7 +8,7 @@ from moto import mock_aws
 
 import jira_notify
 
-default_teams_method  = jira_notify.notify_jira
+default_jira_method  = jira_notify.notify_jira
 
 message_body = '{"priority": "high", "title": "message title", "message": "this is a message body"}'
 received_message = None
@@ -57,7 +57,7 @@ def test_no_message():
 
 
 @mock_aws
-def test_run_without_teams():
+def test_run_without_jira():
     sqs = prepare_aws()
     mock_sqs = sqs[0]
     queue = sqs[1]
@@ -98,6 +98,6 @@ def notify_jira_stub(message):
 
 @pytest.fixture(autouse=True)
 def before_each():
-    jira_notify.send_to_teams = default_teams_method
+    jira_notify.notify_jira = default_jira_method
     global received_message
     received_message = None
