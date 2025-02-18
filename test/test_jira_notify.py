@@ -6,7 +6,7 @@ import pytest
 
 from moto import mock_aws
 
-import jira_notify
+from jira_consumer import jira_notify
 
 consumer = jira_notify.JiraConsumer()
 

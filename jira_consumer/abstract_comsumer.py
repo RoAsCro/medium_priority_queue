@@ -1,66 +1,91 @@
 import os
+import threading
 from abc import ABC, abstractmethod
+from venv import logger
 
 import boto3
 from dotenv import load_dotenv
+from flask import Flask, Blueprint
+
+load_dotenv()
+# Environment variables
+queue = os.getenv("QUEUE")
+access_id = os.getenv("AWS_ACCESS_KEY_ID")
+access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+exception = Exception
+router = Blueprint("messages", __name__, url_prefix="/queue_1")
+
+sqs = boto3.client("sqs",
+                   region_name="us-east-1",
+                   aws_access_key_id=access_id,
+                   aws_secret_access_key=access_key
+                   )
+
+running = False
 
 
-class AbstractConsumer(ABC):
-    load_dotenv()
-    # Environment variables
-    queue = os.getenv("QUEUE")
-    access_id = os.getenv("AWS_ACCESS_KEY_ID")
-    access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-    exception = Exception
+def get_from_queue():
 
-    sqs = boto3.client("sqs",
-                       region_name="us-east-1",
-                       aws_access_key_id=access_id,
-                       aws_secret_access_key=access_key
-                       )
+    response = sqs.receive_message(
+        QueueUrl=queue,
+        MaxNumberOfMessages=1,
+        MessageAttributeNames=["All"],
+        VisibilityTimeout=0,
+        WaitTimeSeconds=20
+    )
 
-    running = False
+    if "Messages" not in response:
+        return None
 
-    def get_from_queue(self):
+    message = response["Messages"][0]
 
-        response = self.sqs.receive_message(
-            QueueUrl=self.queue,
-            MaxNumberOfMessages=1,
-            MessageAttributeNames=["All"],
-            VisibilityTimeout=0,
-            WaitTimeSeconds=20
-        )
+    return message
 
-        if "Messages" not in response:
-            return None
+def send(message_to_send):
+    pass
 
-        message = response["Messages"][0]
+def delete(message):
+    receipt_handle = message["ReceiptHandle"]
 
-        return message
+    sqs.delete_message(
+        QueueUrl=queue,
+        ReceiptHandle=receipt_handle
+    )
 
-    @abstractmethod
-    def send(self, message_to_send):
-        pass
+def process():
+    global running
+    running = True
+    while running:
+        message = get_from_queue()
+        if message:
+            try:
+                send(message)
+            except exception as ex:
+                logger.info(ex)
+                continue
+            delete(message)
+
+def background_thread():
+    thread = threading.Thread(target=process, daemon=True)
+    thread.start()
+    return thread
 
 
-    def delete(self, message):
-        receipt_handle = message["ReceiptHandle"]
 
-        self.sqs.delete_message(
-            QueueUrl=self.queue,
-            ReceiptHandle=receipt_handle
-        )
+@router.get("/health")
+def health_check():
+    return 'Ok', 200
+
+# def run():
+#     try:
+#         health_checker = Flask(__name__)
+#         health_checker.register_blueprint(router)
+#         health_checker.run(host="0.0.0.0")
+#     except KeyboardInterrupt:
+#         logger.info("Shutting Down...")
+#         # bg_thread.join()
+#         global running
+#         running = False
 
 
-    def run(self):
-        self.running = True
-        while self.running:
-            message = self.get_from_queue()
-            if message:
-                try:
-                    self.send(message)
-                except self.exception as ex:
-                    print(ex)
-                    continue
-                self.delete(message)
 
