@@ -8,7 +8,9 @@ from moto import mock_aws
 
 import jira_notify
 
-default_jira_method  = jira_notify.notify_jira
+consumer = jira_notify.JiraConsumer()
+
+default_jira_method  = consumer.send
 
 message_body = '{"priority": "high", "title": "message title", "message": "this is a message body"}'
 received_message = None
@@ -23,7 +25,7 @@ def test_get_message():
                          DelaySeconds=0,
                          MessageBody=message_body)
 
-    retrieved_message = jira_notify.get_from_queue()
+    retrieved_message = consumer.get_from_queue()
 
     assert retrieved_message is not None
 
@@ -36,8 +38,8 @@ def test_delete_message():
                          DelaySeconds=0,
                          MessageBody=message_body)
 
-    retrieved_message = jira_notify.get_from_queue()
-    jira_notify.delete(retrieved_message)
+    retrieved_message = consumer.get_from_queue()
+    consumer.delete(retrieved_message)
 
     assert "Message" not in mock_sqs.receive_message(
         QueueUrl=queue,
@@ -51,7 +53,7 @@ def test_delete_message():
 def test_no_message():
     sqs = prepare_aws()
 
-    retrieved_message = jira_notify.get_from_queue()
+    retrieved_message = consumer.get_from_queue()
 
     assert retrieved_message is None
 
@@ -61,7 +63,7 @@ def test_run_without_jira():
     sqs = prepare_aws()
     mock_sqs = sqs[0]
     queue = sqs[1]
-    jira_notify.notify_jira = notify_jira_stub
+    jira_notify.send = notify_jira_stub
     mock_sqs.send_message(QueueUrl=queue,
                         DelaySeconds=0,
                         MessageBody=message_body)
@@ -98,6 +100,6 @@ def notify_jira_stub(message):
 
 @pytest.fixture(autouse=True)
 def before_each():
-    jira_notify.notify_jira = default_jira_method
+    jira_notify.send = default_jira_method
     global received_message
     received_message = None
