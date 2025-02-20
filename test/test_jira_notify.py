@@ -7,10 +7,10 @@ import pytest
 from moto import mock_aws
 
 import jira_consumer
-jira_notify = jira_consumer.jira_notify
-consumer = jira_notify.consumer
+jira_notify_consumer = jira_consumer.jira_notify
+consumer = jira_notify_consumer.consumer
 
-default_jira_method  = jira_notify.send
+default_jira_method  = jira_notify_consumer.send
 
 message_body = '{"priority": "high", "title": "message title", "message": "this is a message body"}'
 received_message = None
@@ -75,7 +75,7 @@ def notify_jira_stub(message):
 @pytest.fixture(autouse=True)
 def before_each():
     consumer.running = False
-    jira_notify.bg_thread.join()
+    jira_notify_consumer.bg_thread.join()
     consumer.send = default_jira_method
     global received_message
     received_message = None
