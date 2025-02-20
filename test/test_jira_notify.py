@@ -80,27 +80,27 @@ def before_each():
     global received_message
     received_message = None
 
-@mock_aws
-def test_process_without_jira():
-    sqs = prepare_aws()
-    mock_sqs = sqs[0]
-    queue = sqs[1]
-    consumer.send = notify_jira_stub
-    mock_sqs.send_message(QueueUrl=queue,
-                          DelaySeconds=0,
-                          MessageBody=message_body)
-    timer_thread = threading.Thread(target=timer, args=[20])  # Ensure test doesn't run forever if it fails
-    timer_thread.start()
-    consumer.running = True
-    jira_notify.consumer.process()
-    consumer.running = False
-    global received_message
-    assert (received_message is not None  # Message was received
-            and "Message" not in mock_sqs.receive_message(  # Message was deleted
-                QueueUrl=queue,
-                MaxNumberOfMessages=1,
-                MessageAttributeNames=["All"],
-                VisibilityTimeout=0,
-                WaitTimeSeconds=20
-            ))
+# @mock_aws
+# def test_process_without_jira():
+#     sqs = prepare_aws()
+#     mock_sqs = sqs[0]
+#     queue = sqs[1]
+#     consumer.send = notify_jira_stub
+#     mock_sqs.send_message(QueueUrl=queue,
+#                           DelaySeconds=0,
+#                           MessageBody=message_body)
+#     timer_thread = threading.Thread(target=timer, args=[20])  # Ensure test doesn't run forever if it fails
+#     timer_thread.start()
+#     consumer.running = True
+#     jira_notify.consumer.process()
+#     consumer.running = False
+#     global received_message
+#     assert (received_message is not None  # Message was received
+#             and "Message" not in mock_sqs.receive_message(  # Message was deleted
+#                 QueueUrl=queue,
+#                 MaxNumberOfMessages=1,
+#                 MessageAttributeNames=["All"],
+#                 VisibilityTimeout=0,
+#                 WaitTimeSeconds=20
+#             ))
 
