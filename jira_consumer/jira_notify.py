@@ -37,7 +37,7 @@ def send(message_to_send):
 
 consumer.send = send
 consumer.exception = exception
-bg_thread = consumer.background_thread()
+# bg_thread = consumer.background_thread()
 def run():
     health_checker = Flask(__name__)
     health_checker.register_blueprint(consumer.router)
@@ -48,5 +48,5 @@ if __name__ == "__main__":
         run().run(host="0.0.0.0")
     except KeyboardInterrupt:
         logger.info("Shutting Down...")
-        bg_thread.join()
+        # bg_thread.join()
         consumer.running = False
