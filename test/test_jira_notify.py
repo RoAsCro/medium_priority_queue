@@ -43,7 +43,7 @@ def test_delete_message():
         MaxNumberOfMessages=1,
         MessageAttributeNames=["All"],
         VisibilityTimeout=0,
-        WaitTimeSeconds=20
+        WaitTimeSeconds=0
     )
 
 @mock_aws
