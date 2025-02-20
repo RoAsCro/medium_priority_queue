@@ -16,27 +16,27 @@ issue_type = os.getenv("ISSUE_TYPE")
 
 email = os.getenv("EMAIL")
 
-headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
-headers["Authorization"] = f"Bearer {jira_token}"
-jira = JIRA(jira_url, basic_auth=(email, jira_token))
-exception = exceptions.JIRAError
+# headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
+# headers["Authorization"] = f"Bearer {jira_token}"
+# jira = "JIRA(jira_url, basic_auth=(email, jira_token))"
+# exception = exceptions.JIRAError
 consumer = abstract_comsumer
 
 def send(message_to_send):
     print("Sending...")
     message_json = json.loads(message_to_send["Body"])
-    priority = message_json['priority'].capitalize()
-    outgoing = {
-        'project': {'key': jira_board},
-        'summary': f"{priority} priority - {message_json['title']}",
-        'description': message_json['message'],
-        'issuetype': {'name': issue_type}
-    }
-    jira.create_issue(outgoing)
+    # priority = message_json['priority'].capitalize()
+    # outgoing = {
+    #     'project': {'key': jira_board},
+    #     'summary': f"{priority} priority - {message_json['title']}",
+    #     'description': message_json['message'],
+    #     'issuetype': {'name': issue_type}
+    # }
+    # jira.create_issue(outgoing)
 
 
 consumer.send = send
-consumer.exception = exception
+# consumer.exception = exception
 # bg_thread = consumer.background_thread()
 def run():
     health_checker = Flask(__name__)
