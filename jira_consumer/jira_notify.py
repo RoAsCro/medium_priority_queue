@@ -21,7 +21,7 @@ print("Headers done")
 headers["Authorization"] = f"Bearer {jira_token}"
 print("Headers set")
 
-jira = "JIRA(jira_url, basic_auth=(email, jira_token))"
+jira = JIRA(jira_url, basic_auth=(email, jira_token))
 print("jira created")
 
 # exception = exceptions.JIRAError
