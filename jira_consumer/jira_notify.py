@@ -1,62 +1,84 @@
-import json
 import os
-from venv import logger
+import threading
+from logging import getLogger
 
+import boto3
 from dotenv import load_dotenv
-from flask import Flask
-from jira import JIRA, exceptions
+from flask import Blueprint
 
-import abstract_comsumer
+default_region = "us-east-1"
 
 load_dotenv()
-jira_url = os.getenv("JIRA_URL")
-jira_board = os.getenv("BOARD_ID")
-jira_token = os.getenv("API_TOKEN")
-issue_type = os.getenv("ISSUE_TYPE")
+# Environment variables
+queue = os.getenv("QUEUE")
+aws_region = os.getenv("AWS_REGION")
+if aws_region is None:
+    aws_region = default_region
+access_id = os.getenv("AWS_ACCESS_KEY_ID")
+access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
-email = os.getenv("EMAIL")
-print("Starting")
-headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
-print("Headers done")
-headers["Authorization"] = f"Bearer {jira_token}"
-print("Headers set")
+exception = Exception
+router = Blueprint("messages", __name__, url_prefix="/queue_1")
 
-jira = None
-print("jira created")
+logger = getLogger()
 
-exception = exceptions.JIRAError
-print("Exception set")
+sqs = boto3.client("sqs",
+                   region_name=aws_region,
+                   aws_access_key_id=access_id,
+                   aws_secret_access_key=access_key
+                   )
 
-consumer = abstract_comsumer
+running = False
+
+
+def get_from_queue():
+
+    response = sqs.receive_message(
+        QueueUrl=queue,
+        MaxNumberOfMessages=1,
+        MessageAttributeNames=["All"],
+        VisibilityTimeout=0,
+        WaitTimeSeconds=20
+    )
+
+    if "Messages" not in response:
+        return None
+
+    message = response["Messages"][0]
+
+    return message
 
 def send(message_to_send):
-    global jira
-    if jira is None:
-        jira = JIRA(jira_url, basic_auth=(email, jira_token))
-    print("Sending...")
-    message_json = json.loads(message_to_send["Body"])
-    priority = message_json['priority'].capitalize()
-    outgoing = {
-        'project': {'key': jira_board},
-        'summary': f"{priority} priority - {message_json['title']}",
-        'description': message_json['message'],
-        'issuetype': {'name': issue_type}
-    }
-    jira.create_issue(outgoing)
+    pass
+
+def delete(message):
+    receipt_handle = message["ReceiptHandle"]
+
+    sqs.delete_message(
+        QueueUrl=queue,
+        ReceiptHandle=receipt_handle
+    )
+
+def process():
+    global running
+    running = True
+    while running:
+        message = get_from_queue()
+        if message:
+            try:
+                send(message)
+            except exception as ex:
+                logger.error(ex)
+                continue
+            delete(message)
+
+def background_thread():
+    thread = threading.Thread(target=process, daemon=True)
+    thread.start()
+    return thread
 
 
-consumer.send = send
-consumer.exception = exception
-bg_thread = consumer.background_thread()
-def run():
-    health_checker = Flask(__name__)
-    health_checker.register_blueprint(consumer.router)
-    return health_checker
 
-if __name__ == "__main__":
-    try:
-        run().run(host="0.0.0.0")
-    except KeyboardInterrupt:
-        logger.info("Shutting Down...")
-        bg_thread.join()
-        consumer.running = False
+@router.get("/health")
+def health_check():
+    return 'Ok', 200
