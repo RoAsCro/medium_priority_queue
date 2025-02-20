@@ -6,11 +6,11 @@ import pytest
 
 from moto import mock_aws
 
-# import jira_consumer
-# jira_notify_consumer = jira_consumer.jira_notify
-# consumer = jira_notify_consumer.consumer
+import jira_consumer
+jira_notify_consumer = jira_consumer.jira_notify
+consumer = jira_notify_consumer.consumer
 
-# default_jira_method  = jira_notify_consumer.send
+default_jira_method  = jira_notify_consumer.send
 
 message_body = '{"priority": "high", "title": "message title", "message": "this is a message body"}'
 received_message = None
