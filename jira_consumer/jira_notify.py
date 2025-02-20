@@ -1,84 +1,58 @@
+import json
 import os
-import threading
 from logging import getLogger
 
-import boto3
 from dotenv import load_dotenv
-from flask import Blueprint
+from flask import Flask
+from jira import JIRA, exceptions
 
-default_region = "us-east-1"
+import abstract_comsumer
 
 load_dotenv()
-# Environment variables
-queue = os.getenv("QUEUE")
-aws_region = os.getenv("AWS_REGION")
-if aws_region is None:
-    aws_region = default_region
-access_id = os.getenv("AWS_ACCESS_KEY_ID")
-access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+jira_url = os.getenv("JIRA_URL")
+jira_board = os.getenv("BOARD_ID")
+jira_token = os.getenv("API_TOKEN")
+issue_type = os.getenv("ISSUE_TYPE")
+email = os.getenv("EMAIL")
 
-exception = Exception
-router = Blueprint("messages", __name__, url_prefix="/queue_1")
+
+headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
+headers["Authorization"] = f"Bearer {jira_token}"
+jira = None
+exception = exceptions.JIRAError
 
 logger = getLogger()
 
-sqs = boto3.client("sqs",
-                   region_name=aws_region,
-                   aws_access_key_id=access_id,
-                   aws_secret_access_key=access_key
-                   )
-
-running = False
-
-
-def get_from_queue():
-
-    response = sqs.receive_message(
-        QueueUrl=queue,
-        MaxNumberOfMessages=1,
-        MessageAttributeNames=["All"],
-        VisibilityTimeout=0,
-        WaitTimeSeconds=20
-    )
-
-    if "Messages" not in response:
-        return None
-
-    message = response["Messages"][0]
-
-    return message
+consumer = abstract_comsumer
 
 def send(message_to_send):
-    pass
-
-def delete(message):
-    receipt_handle = message["ReceiptHandle"]
-
-    sqs.delete_message(
-        QueueUrl=queue,
-        ReceiptHandle=receipt_handle
-    )
-
-def process():
-    global running
-    running = True
-    while running:
-        message = get_from_queue()
-        if message:
-            try:
-                send(message)
-            except exception as ex:
-                logger.error(ex)
-                continue
-            delete(message)
-
-def background_thread():
-    thread = threading.Thread(target=process, daemon=True)
-    thread.start()
-    return thread
+    global jira
+    if jira is None:
+        jira = JIRA(jira_url, basic_auth=(email, jira_token))
+    print("Sending...")
+    message_json = json.loads(message_to_send["Body"])
+    priority = message_json['priority'].capitalize()
+    outgoing = {
+        'project': {'key': jira_board},
+        'summary': f"{priority} priority - {message_json['title']}",
+        'description': message_json['message'],
+        'issuetype': {'name': issue_type}
+    }
+    jira.create_issue(outgoing)
 
 
+consumer.send = send
+consumer.exception = exception
+bg_thread = consumer.background_thread()
+def run():
+    health_checker = Flask(__name__)
+    health_checker.register_blueprint(consumer.router)
+    return health_checker
 
-@router.get("/health")
-def health_check():
-    return 'Ok', 200
+if __name__ == "__main__":
+    try:
+        run().run(host="0.0.0.0")
+    except KeyboardInterrupt:
+        logger.info("Shutting Down...")
+        bg_thread.join()
+        consumer.running = False
