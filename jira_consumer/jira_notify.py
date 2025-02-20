@@ -21,7 +21,7 @@ print("Headers done")
 headers["Authorization"] = f"Bearer {jira_token}"
 print("Headers set")
 
-# jira = JIRA(jira_url, basic_auth=(email, jira_token))
+jira = None
 print("jira created")
 
 exception = exceptions.JIRAError
@@ -30,6 +30,9 @@ print("Exception set")
 consumer = abstract_comsumer
 
 def send(message_to_send):
+    global jira
+    if jira is None:
+        jira = JIRA(jira_url, basic_auth=(email, jira_token))
     print("Sending...")
     message_json = json.loads(message_to_send["Body"])
     priority = message_json['priority'].capitalize()
@@ -39,7 +42,7 @@ def send(message_to_send):
         'description': message_json['message'],
         'issuetype': {'name': issue_type}
     }
-    # jira.create_issue(outgoing)
+    jira.create_issue(outgoing)
 
 
 consumer.send = send
@@ -55,5 +58,5 @@ if __name__ == "__main__":
         run().run(host="0.0.0.0")
     except KeyboardInterrupt:
         logger.info("Shutting Down...")
-        # bg_thread.join()
+        bg_thread.join()
         consumer.running = False
