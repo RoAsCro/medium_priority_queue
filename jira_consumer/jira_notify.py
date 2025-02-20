@@ -15,11 +15,18 @@ jira_token = os.getenv("API_TOKEN")
 issue_type = os.getenv("ISSUE_TYPE")
 
 email = os.getenv("EMAIL")
-
-# headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
+print("Starting")
+headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
+print("Headers done")
 # headers["Authorization"] = f"Bearer {jira_token}"
+print("Headers set")
+
 # jira = "JIRA(jira_url, basic_auth=(email, jira_token))"
+print("jira created")
+
 # exception = exceptions.JIRAError
+print("Exception set")
+
 consumer = abstract_comsumer
 
 def send(message_to_send):
