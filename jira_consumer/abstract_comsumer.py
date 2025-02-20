@@ -64,10 +64,10 @@ def process():
                 continue
             delete(message)
 
-# def background_thread():
-#     thread = threading.Thread(target=process, daemon=True)
-#     thread.start()
-#     return thread
+def background_thread():
+    thread = threading.Thread(target=process, daemon=True)
+    thread.start()
+    return thread
 
 
 

@@ -21,10 +21,10 @@ print("Headers done")
 headers["Authorization"] = f"Bearer {jira_token}"
 print("Headers set")
 
-jira = JIRA(jira_url, basic_auth=(email, jira_token))
+# jira = JIRA(jira_url, basic_auth=(email, jira_token))
 print("jira created")
 
-# exception = exceptions.JIRAError
+exception = exceptions.JIRAError
 print("Exception set")
 
 consumer = abstract_comsumer
@@ -32,19 +32,19 @@ consumer = abstract_comsumer
 def send(message_to_send):
     print("Sending...")
     message_json = json.loads(message_to_send["Body"])
-    # priority = message_json['priority'].capitalize()
-    # outgoing = {
-    #     'project': {'key': jira_board},
-    #     'summary': f"{priority} priority - {message_json['title']}",
-    #     'description': message_json['message'],
-    #     'issuetype': {'name': issue_type}
-    # }
+    priority = message_json['priority'].capitalize()
+    outgoing = {
+        'project': {'key': jira_board},
+        'summary': f"{priority} priority - {message_json['title']}",
+        'description': message_json['message'],
+        'issuetype': {'name': issue_type}
+    }
     # jira.create_issue(outgoing)
 
 
 consumer.send = send
-# consumer.exception = exception
-# bg_thread = consumer.background_thread()
+consumer.exception = exception
+bg_thread = consumer.background_thread()
 def run():
     health_checker = Flask(__name__)
     health_checker.register_blueprint(consumer.router)
