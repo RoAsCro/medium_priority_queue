@@ -18,10 +18,10 @@ email = os.getenv("EMAIL")
 print("Starting")
 headers = JIRA.DEFAULT_OPTIONS["headers"].copy()
 print("Headers done")
-# headers["Authorization"] = f"Bearer {jira_token}"
+headers["Authorization"] = f"Bearer {jira_token}"
 print("Headers set")
 
-# jira = "JIRA(jira_url, basic_auth=(email, jira_token))"
+jira = "JIRA(jira_url, basic_auth=(email, jira_token))"
 print("jira created")
 
 # exception = exceptions.JIRAError
