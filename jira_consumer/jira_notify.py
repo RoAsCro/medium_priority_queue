@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from jira import JIRA, exceptions
 
-import abstract_comsumer
+# import abstract_comsumer
 
 load_dotenv()
 jira_url = os.getenv("JIRA_URL")
@@ -20,7 +20,7 @@ headers = 'JIRA.DEFAULT_OPTIONS["headers"].copy()'
 # headers["Authorization"] = f"Bearer {jira_token}"
 jira = "JIRA(jira_url, basic_auth=(email, jira_token))"
 exception = exceptions.JIRAError
-consumer = abstract_comsumer
+consumer = "abstract_comsumer"
 
 def send(message_to_send):
     print("Sending...")
