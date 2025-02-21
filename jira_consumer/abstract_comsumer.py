@@ -1,6 +1,6 @@
+import logging
 import os
 import threading
-from venv import logger
 
 import boto3
 from dotenv import load_dotenv
@@ -16,8 +16,10 @@ if aws_region is None:
     aws_region = default_region
 access_id = os.getenv("AWS_ACCESS_KEY_ID")
 access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+
 exception = Exception
 router = Blueprint("messages", __name__, url_prefix="/queue_1")
+
 
 sqs = boto3.client("sqs",
                    region_name=aws_region,
@@ -65,7 +67,7 @@ def process():
             try:
                 send(message)
             except exception as ex:
-                logger.info(ex)
+                logging.error(ex)
                 continue
             delete(message)
 

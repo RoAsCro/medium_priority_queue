@@ -1,7 +1,6 @@
 import json
 import os
-from logging import getLogger
-
+import logging
 from dotenv import load_dotenv
 from flask import Flask
 from jira import JIRA, exceptions
@@ -21,11 +20,11 @@ headers["Authorization"] = f"Bearer {jira_token}"
 jira = None
 exception = exceptions.JIRAError
 
-logger = getLogger()
 
 consumer = abstract_comsumer
 
 def send(message_to_send):
+    logging.info("Sending...")
     global jira
     if jira is None:
         jira = JIRA(jira_url, basic_auth=(email, jira_token))
@@ -53,6 +52,6 @@ if __name__ == "__main__":
     try:
         run().run(host="0.0.0.0")
     except KeyboardInterrupt:
-        logger.info("Shutting Down...")
+        logging.info("Shutting Down...")
         bg_thread.join()
         consumer.running = False
