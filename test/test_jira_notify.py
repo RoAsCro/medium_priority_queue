@@ -13,7 +13,6 @@ class ConsumerStub(JiraConsumer):
     @mock_aws()
     def __init__(self):
         super().__init__()
-        self.jira =
         self.jira.create_issue = self.send_stub
 
 
