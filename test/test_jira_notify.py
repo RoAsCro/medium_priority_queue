@@ -3,6 +3,7 @@ import time
 
 import boto3
 import pytest
+from jira import JIRA
 
 from moto import mock_aws
 from jira_consumer import jira_notify
@@ -18,9 +19,11 @@ class ConsumerStub(JiraConsumer):
         jira_notify.issue_type = ""
         jira_notify.email = ""
         super().__init__()
+        self.jira = JIRA("", basic_auth=("", ""))
         self.jira.create_issue = self.send_stub
 
-
+    def send(self, message):
+        self.sent_message = message
     def send_stub(self, message):
         self.sent_message = message
 
