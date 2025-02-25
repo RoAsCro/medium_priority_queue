@@ -1,9 +1,8 @@
 import json
 import os
-import logging
+
 from dotenv import load_dotenv
 from jira import JIRA, exceptions
-
 from sqs_consumer.abstract_consumer import AbstractConsumer
 
 load_dotenv()
@@ -23,7 +22,6 @@ class JiraConsumer(AbstractConsumer):
         self.jira = None
 
     def send(self, message_to_send):
-        logging.info("Sending...")
         if self.jira is None:
             self.jira = JIRA(jira_url, basic_auth=(email, jira_token))
 
@@ -45,6 +43,6 @@ if __name__ == "__main__":
     try:
         run().run(host="0.0.0.0")
     except KeyboardInterrupt:
-        logging.info("Shutting Down...")
+        consumer.info_logger.info("Shutting Down...")
         consumer.bg_thread.join()
         consumer.running = False
