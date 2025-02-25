@@ -6,13 +6,14 @@ import pytest
 
 from moto import mock_aws
 
-import jira_consumer
-class ConsumerStub(jira_consumer.jira_notify.JiraConsumer):
+from jira_consumer.jira_notify import JiraConsumer
+class ConsumerStub(JiraConsumer):
     sent_message = None
 
     @mock_aws()
     def __init__(self):
         super().__init__()
+        self.jira =
         self.jira.create_issue = self.send_stub
 
 
