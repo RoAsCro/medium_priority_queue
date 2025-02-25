@@ -19,8 +19,8 @@ class ConsumerStub(JiraConsumer):
         jira_notify.issue_type = ""
         jira_notify.email = ""
         super().__init__()
-        self.jira = JIRA("", basic_auth=("", ""))
-        self.jira.create_issue = self.send_stub
+        # self.jira = JIRA("", basic_auth=("", ""))
+        # self.jira.create_issue = self.send_stub
 
     def send(self, message):
         self.sent_message = message
