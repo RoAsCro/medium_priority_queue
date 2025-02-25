@@ -5,13 +5,18 @@ import boto3
 import pytest
 
 from moto import mock_aws
-
+from jira_consumer import jira_notify
 from jira_consumer.jira_notify import JiraConsumer
 class ConsumerStub(JiraConsumer):
     sent_message = None
 
     @mock_aws()
     def __init__(self):
+        jira_notify.jira_url = ""
+        jira_notify.jira_board = ""
+        jira_notify.jira_token = ""
+        jira_notify.issue_type = ""
+        jira_notify.email = ""
         super().__init__()
         self.jira.create_issue = self.send_stub
 
