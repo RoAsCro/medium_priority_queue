@@ -20,10 +20,13 @@ class JiraConsumer(AbstractConsumer):
     def __init__(self):
         super().__init__()
         self.exception = exception
-        self.jira = JIRA(jira_url, basic_auth=(email, jira_token))
+        self.jira = None
 
     def send(self, message_to_send):
         logging.info("Sending...")
+        if self.jira is None:
+            self.jira = JIRA(jira_url, basic_auth=(email, jira_token))
+
         message_json = json.loads(message_to_send["Body"])
         priority = message_json['priority'].capitalize()
 
