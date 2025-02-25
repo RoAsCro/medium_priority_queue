@@ -13,20 +13,10 @@ class ConsumerStub(JiraConsumer):
 
     @mock_aws()
     def __init__(self):
-        jira_notify.jira_url = ""
-        jira_notify.jira_board = ""
-        jira_notify.jira_token = ""
-        jira_notify.issue_type = ""
-        jira_notify.email = ""
         super().__init__()
-        # self.jira = JIRA("", basic_auth=("", ""))
-        # self.jira.create_issue = self.send_stub
 
     def send(self, message):
         self.sent_message = message
-    def send_stub(self, message):
-        self.sent_message = message
-
 
 consumer = ConsumerStub()
 
@@ -90,7 +80,7 @@ def before_each():
     consumer.sent_message = None
 
 @mock_aws
-def test_process_and_send():
+def test_process_and_send(): # Sending to Jira is not tested
     sqs = prepare_aws()
     mock_sqs = sqs[0]
     queue = sqs[1]
