@@ -17,7 +17,7 @@ headers["Authorization"] = f"Bearer {jira_token}"
 exception = exceptions.JIRAError
 class JiraConsumer(AbstractConsumer):
     def __init__(self):
-        super().__init__(queue_var_name="MEDIUM_PRIORITY_QUEUE")
+        super().__init__()
         self.exception = exception
         self.jira = None
 
